@@ -1,0 +1,11 @@
+dimensions:
+  - name: task_success
+    weight: 0.4
+  - name: output_quality
+    weight: 0.3
+  - name: reasoning_transparency
+    weight: 0.1
+  - name: latency
+    weight: 0.1
+  - name: cost
+    weight: 0.1

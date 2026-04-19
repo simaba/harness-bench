@@ -1,0 +1,11 @@
+{
+  "harness": "Claude Code",
+  "task_id": "T1",
+  "latency_ms": 2400,
+  "cost_usd": 0.08,
+  "scores": {
+    "task_success": 0.95,
+    "output_quality": 0.9,
+    "reasoning_transparency": 0.8
+  }
+}

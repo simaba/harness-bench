@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["harness", "task_id", "scores", "latency_ms", "cost_usd"],
+  "properties": {
+    "harness": {"type": "string"},
+    "task_id": {"type": "string"},
+    "latency_ms": {"type": "number"},
+    "cost_usd": {"type": "number"},
+    "scores": {
+      "type": "object",
+      "properties": {
+        "task_success": {"type": "number"},
+        "output_quality": {"type": "number"},
+        "reasoning_transparency": {"type": "number"}
+      }
+    }
+  }
+}
