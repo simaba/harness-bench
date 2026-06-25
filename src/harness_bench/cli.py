@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from .core import load_run, score_run
+
+from .core import RunValidationError, load_run, score_run_details
 
 
 def main() -> int:
@@ -12,10 +13,17 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "score":
-        payload = load_run(args.path)
+        try:
+            payload = load_run(args.path)
+            details = score_run_details(payload)
+        except (OSError, RunValidationError) as exc:
+            parser.error(str(exc))
         print(f"harness={payload['harness']}")
         print(f"task_id={payload['task_id']}")
-        print(f"score={score_run(payload):.4f}")
+        print(f"quality_score={details['quality_score']:.4f}")
+        print(f"latency_component={details['latency_component']:.4f}")
+        print(f"cost_component={details['cost_component']:.4f}")
+        print(f"score={details['total_score']:.4f}")
         return 0
 
     parser.print_help()
