@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,7 @@ REQUIRED_TEXT_FIELDS = (
     "environment",
     "tool_permission_scope",
     "seed_policy",
+    "run_date",
 )
 
 
@@ -59,6 +61,13 @@ def _positive_integer(value: Any, field: str) -> int:
     return value
 
 
+def _validate_iso_date(value: str, field: str) -> None:
+    try:
+        date.fromisoformat(value)
+    except ValueError as exc:
+        raise RunValidationError(f"{field} must use YYYY-MM-DD") from exc
+
+
 def validate_run(payload: dict[str, Any]) -> None:
     """Validate a contextualized run artifact before comparing results.
 
@@ -72,6 +81,7 @@ def validate_run(payload: dict[str, Any]) -> None:
     for key in REQUIRED_TEXT_FIELDS:
         if not isinstance(payload.get(key), str) or not payload[key].strip():
             raise RunValidationError(f"{key} must be a non-empty string")
+    _validate_iso_date(payload["run_date"], "run_date")
 
     if not isinstance(payload.get("synthetic_data"), bool):
         raise RunValidationError("synthetic_data must be a boolean")
