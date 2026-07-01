@@ -11,6 +11,17 @@ WEIGHTS = {
     "observable_trace_quality": 0.1,
 }
 SCORE_DIMENSIONS = tuple(WEIGHTS)
+REQUIRED_TEXT_FIELDS = (
+    "harness",
+    "harness_version",
+    "model_version",
+    "task_id",
+    "task_version",
+    "rubric_version",
+    "environment",
+    "tool_permission_scope",
+    "seed_policy",
+)
 
 
 class RunValidationError(ValueError):
@@ -35,13 +46,36 @@ def _non_negative_number(value: Any, field: str) -> float:
     return normalized
 
 
+def _positive_number(value: Any, field: str) -> float:
+    normalized = _non_negative_number(value, field)
+    if normalized <= 0:
+        raise RunValidationError(f"{field} must be greater than 0")
+    return normalized
+
+
+def _positive_integer(value: Any, field: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise RunValidationError(f"{field} must be a positive integer")
+    return value
+
+
 def validate_run(payload: dict[str, Any]) -> None:
-    """Validate the normalized artifact before comparing benchmark results."""
+    """Validate a contextualized run artifact before comparing results.
+
+    A score is only interpretable when the task, harness/model version, rubric,
+    execution context, permission scope, and task-specific operational budgets
+    are known. The artifact therefore carries those inputs explicitly.
+    """
     if not isinstance(payload, dict):
         raise RunValidationError("run artifact must be a JSON object")
-    for key in ("harness", "task_id"):
+
+    for key in REQUIRED_TEXT_FIELDS:
         if not isinstance(payload.get(key), str) or not payload[key].strip():
             raise RunValidationError(f"{key} must be a non-empty string")
+
+    if not isinstance(payload.get("synthetic_data"), bool):
+        raise RunValidationError("synthetic_data must be a boolean")
+    _positive_integer(payload.get("run_count"), "run_count")
 
     scores = payload.get("scores")
     if not isinstance(scores, dict):
@@ -54,6 +88,8 @@ def validate_run(payload: dict[str, Any]) -> None:
 
     _non_negative_number(payload.get("latency_ms"), "latency_ms")
     _non_negative_number(payload.get("cost_usd"), "cost_usd")
+    _positive_number(payload.get("latency_budget_ms"), "latency_budget_ms")
+    _positive_number(payload.get("cost_budget_usd"), "cost_budget_usd")
 
 
 def score_run_details(payload: dict[str, Any]) -> dict[str, float]:
@@ -63,8 +99,10 @@ def score_run_details(payload: dict[str, Any]) -> dict[str, float]:
     quality_score = sum(float(scores[dimension]) * weight for dimension, weight in WEIGHTS.items())
     latency_ms = float(payload["latency_ms"])
     cost_usd = float(payload["cost_usd"])
-    latency_component = max(0.0, 1 - min(latency_ms / 10000, 1))
-    cost_component = max(0.0, 1 - min(cost_usd / 1, 1))
+    latency_budget_ms = float(payload["latency_budget_ms"])
+    cost_budget_usd = float(payload["cost_budget_usd"])
+    latency_component = max(0.0, 1 - min(latency_ms / latency_budget_ms, 1))
+    cost_component = max(0.0, 1 - min(cost_usd / cost_budget_usd, 1))
     total_score = quality_score + 0.1 * latency_component + 0.1 * cost_component
     return {
         "quality_score": round(quality_score, 4),
@@ -82,6 +120,8 @@ def score_run(payload: dict[str, Any]) -> float:
 def load_run(path: str | Path) -> dict[str, Any]:
     try:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise RunValidationError(f"could not read run artifact: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise RunValidationError(f"invalid JSON run artifact: {exc.msg}") from exc
     if not isinstance(payload, dict):
