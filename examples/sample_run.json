@@ -8,6 +8,7 @@
   "environment": "local-synthetic",
   "tool_permission_scope": "read-only test fixture",
   "seed_policy": "fixed seed 42",
+  "run_date": "2026-06-25",
   "synthetic_data": true,
   "run_count": 3,
   "latency_ms": 2400,
