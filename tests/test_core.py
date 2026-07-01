@@ -14,6 +14,7 @@ def valid_payload():
         "environment": "local-synthetic",
         "tool_permission_scope": "read-only test fixture",
         "seed_policy": "fixed seed 42",
+        "run_date": "2026-06-25",
         "synthetic_data": True,
         "run_count": 3,
         "scores": {
@@ -58,6 +59,14 @@ def test_missing_context_is_rejected():
     del payload["rubric_version"]
 
     with pytest.raises(RunValidationError, match="rubric_version must be a non-empty string"):
+        score_run(payload)
+
+
+def test_invalid_run_date_is_rejected():
+    payload = valid_payload()
+    payload["run_date"] = "June 25"
+
+    with pytest.raises(RunValidationError, match="run_date must use YYYY-MM-DD"):
         score_run(payload)
 
 
