@@ -18,8 +18,24 @@ def main() -> int:
             details = score_run_details(payload)
         except (OSError, RunValidationError) as exc:
             parser.error(str(exc))
-        print(f"harness={payload['harness']}")
-        print(f"task_id={payload['task_id']}")
+        print(f"harness={payload['harness']} ({payload['harness_version']})")
+        print(f"model_version={payload['model_version']}")
+        print(f"task_id={payload['task_id']} ({payload['task_version']})")
+        print(f"rubric_version={payload['rubric_version']}")
+        print(f"run_count={payload['run_count']}")
+        print(f"synthetic_data={payload['synthetic_data']}")
+        print(
+            "latency={}/{}ms".format(
+                payload["latency_ms"],
+                payload["latency_budget_ms"],
+            )
+        )
+        print(
+            "cost=${}/${}".format(
+                payload["cost_usd"],
+                payload["cost_budget_usd"],
+            )
+        )
         print(f"quality_score={details['quality_score']:.4f}")
         print(f"latency_component={details['latency_component']:.4f}")
         print(f"cost_component={details['cost_component']:.4f}")

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Harness Bench Run Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "harness",
+    "harness_version",
+    "model_version",
+    "task_id",
+    "task_version",
+    "rubric_version",
+    "environment",
+    "tool_permission_scope",
+    "seed_policy",
+    "run_date",
+    "synthetic_data",
+    "run_count",
+    "latency_ms",
+    "latency_budget_ms",
+    "cost_usd",
+    "cost_budget_usd",
+    "scores"
+  ],
+  "properties": {
+    "harness": {"type": "string", "minLength": 1},
+    "harness_version": {"type": "string", "minLength": 1},
+    "model_version": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "task_version": {"type": "string", "minLength": 1},
+    "rubric_version": {"type": "string", "minLength": 1},
+    "environment": {"type": "string", "minLength": 1},
+    "tool_permission_scope": {"type": "string", "minLength": 1},
+    "seed_policy": {"type": "string", "minLength": 1},
+    "run_date": {"type": "string", "format": "date"},
+    "synthetic_data": {"type": "boolean"},
+    "run_count": {"type": "integer", "minimum": 1},
+    "latency_ms": {"type": "number", "minimum": 0},
+    "latency_budget_ms": {"type": "number", "exclusiveMinimum": 0},
+    "cost_usd": {"type": "number", "minimum": 0},
+    "cost_budget_usd": {"type": "number", "exclusiveMinimum": 0},
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_success", "output_quality", "observable_trace_quality"],
+      "properties": {
+        "task_success": {"type": "number", "minimum": 0, "maximum": 1},
+        "output_quality": {"type": "number", "minimum": 0, "maximum": 1},
+        "observable_trace_quality": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}
